@@ -63,7 +63,7 @@ function installPipRequirements(){
 function runCdk(){
 	echo "Run cdk ${INPUT_CDK_SUBCOMMAND} ${*} \"${INPUT_CDK_STACK}\""
 	set -o pipefail
-	cdk ${INPUT_CDK_SUBCOMMAND} ${*} "${INPUT_CDK_STACK}" 2>&1 | tee output.log
+	cdk ${INPUT_CDK_SUBCOMMAND} ${*} "${INPUT_CDK_STACK}" 2>&1 | egrep -v fchown | tee output.log
 	exitCode=${?}
 	set +o pipefail
 	echo "status_code=${exitCode}" >> $GITHUB_OUTPUT
@@ -78,7 +78,7 @@ function runCdk(){
 	fi
 
 	if [ "$GITHUB_EVENT_NAME" == "pull_request" ] && [ "${INPUT_ACTIONS_COMMENT}" == "true" ]; then
-		commentWrapper="#### \`cdk ${INPUT_CDK_SUBCOMMAND}\` ${commentStatus}
+		commentWrapper="#### \`cdk ${INPUT_CDK_SUBCOMMAND}\` ${INPUT_CDK_STACK}
 <details><summary>Show Output</summary>
 
 \`\`\`
@@ -87,7 +87,7 @@ ${output}
 
 </details>
 
-*Workflow: \`${GITHUB_WORKFLOW}\`, Action: \`${GITHUB_ACTION}\`, Working Directory: \`${INPUT_WORKING_DIR}\`*"
+"
 
 		payload=$(echo "${commentWrapper}" | jq -R --slurp '{body: .}')
 		commentsURL=$(cat ${GITHUB_EVENT_PATH} | jq -r .pull_request.comments_url)
